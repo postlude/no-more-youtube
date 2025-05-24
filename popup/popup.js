@@ -4,10 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	const addWordButton = document.getElementById('addWord');
 	const whitelistWords = document.getElementById('whitelistWords');
 
+	const allowedChannelInput = document.getElementById('allowedChannelInput');
+	const addChannelButton = document.getElementById('addChannel');
+	const allowedChannelsList = document.getElementById('allowedChannels');
+
 	// 익스텐션 상태 로드
-	chrome.storage.sync.get(['enabled', 'whitelist'], (result) => {
+	chrome.storage.sync.get(['enabled', 'whitelist', 'allowedChannels'], (result) => {
 		extensionToggle.checked = result.enabled ?? true;
 		updateWhitelist(result.whitelist ?? []);
+		updateAllowedChannels(result.allowedChannels ?? []);
 	});
 
 	// 익스텐션 토글 이벤트
@@ -72,6 +77,53 @@ document.addEventListener('DOMContentLoaded', () => {
 		whitelistWords.innerHTML = words.map(word => `
 			<li>
 				${word}
+				<button>×</button>
+			</li>
+		`).join('');
+	}
+
+	// Allowed Channels 추가 함수
+	function addAllowedChannel() {
+		const channel = allowedChannelInput.value.trim();
+		if (channel) {
+			chrome.storage.sync.get(['allowedChannels'], (result) => {
+				const allowedChannels = result.allowedChannels ?? [];
+				if (!allowedChannels.includes(channel)) {
+					allowedChannels.push(channel);
+					chrome.storage.sync.set({ allowedChannels }, () => {
+						updateAllowedChannels(allowedChannels);
+						allowedChannelInput.value = '';
+					});
+				}
+			});
+		}
+	}
+
+	addChannelButton.addEventListener('click', addAllowedChannel);
+	allowedChannelInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			addAllowedChannel();
+		}
+	});
+
+	// Allowed Channels 삭제
+	allowedChannelsList.addEventListener('click', (e) => {
+		if (e.target.tagName === 'BUTTON') {
+			const channel = e.target.parentElement.textContent.replace('×', '').trim();
+			chrome.storage.sync.get(['allowedChannels'], (result) => {
+				const allowedChannels = result.allowedChannels ?? [];
+				const newAllowedChannels = allowedChannels.filter(c => c !== channel);
+				chrome.storage.sync.set({ allowedChannels: newAllowedChannels }, () => {
+					updateAllowedChannels(newAllowedChannels);
+				});
+			});
+		}
+	});
+
+	function updateAllowedChannels(channels) {
+		allowedChannelsList.innerHTML = channels.map(channel => `
+			<li>
+				${channel}
 				<button>×</button>
 			</li>
 		`).join('');

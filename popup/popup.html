@@ -14,16 +14,25 @@
 				<input type="checkbox" id="extensionToggle">
 				<span class="slider round"></span>
 			</label>
-			<span class="toggle-label">Enable Extension</span>
+			<span class="toggle-label">Extension Enabled</span>
 		</div>
 
 		<div class="whitelist-container">
-			<h2>Whitelist Words</h2>
+			<h2>Allowed Titles (Whitelist)</h2>
 			<div class="input-group">
-				<input type="text" id="whitelistInput" placeholder="New word">
+				<input type="text" id="whitelistInput" placeholder="Add allowed word">
 				<button id="addWord">Add</button>
 			</div>
 			<ul id="whitelistWords"></ul>
+		</div>
+
+		<div class="allowed-channels-container">
+			<h2>Allowed Channels</h2>
+			<div class="input-group">
+				<input type="text" id="allowedChannelInput" placeholder="Add /@channel or /channel/ID">
+				<button id="addChannel">Add</button>
+			</div>
+			<ul id="allowedChannels"></ul>
 		</div>
 	</div>
 	<script src="popup.js"></script>

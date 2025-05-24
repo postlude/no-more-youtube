@@ -1,5 +1,6 @@
-// 전역 화이트리스트 변수
+// 전역 화이트리스트 및 허용 채널 변수
 let currentWhitelist = [];
+let allowedChannels = [];
 
 // 화이트리스트 단어 확인
 function isInWhitelist(title, whitelist) {
@@ -21,11 +22,15 @@ function getVideoTitle(videoElement) {
 		'.style-scope.ytd-compact-video-renderer #video-title',
 		'.style-scope.ytd-playlist-video-renderer #video-title',
 		'.style-scope.ytd-reel-item-renderer #video-title',
+		'a.shortsLockupViewModeHostEndpoint[aria-label]',
+		'a.shortsLockupViewModeHostEndpoint[title]',
 	];
 	for (const selector of selectors) {
 		const el = videoElement.querySelector(selector);
-		if (el && el.textContent) {
-			return el.textContent.trim();
+		if (el) {
+			if (el.getAttribute('aria-label')) return el.getAttribute('aria-label').trim();
+			if (el.getAttribute('title')) return el.getAttribute('title').trim();
+			if (el.textContent) return el.textContent.trim();
 		}
 	}
 	return '';
@@ -58,37 +63,40 @@ function coverVideo(videoElement, shouldCover) {
 }
 
 // 비디오 처리 함수
-function processAllVideos(whitelist) {
+function processAllVideos(whitelist, allowedChannels) {
 	const selectors = [
 		'ytd-rich-item-renderer',
 		'ytd-video-renderer',
 		'ytd-grid-video-renderer',
 		'ytd-reel-item-renderer',
 		'ytd-compact-video-renderer',
-		'ytd-playlist-video-renderer'
+		'ytd-playlist-video-renderer',
+		'ytd-reel-shelf-renderer ytd-reel-item-renderer'
 	];
 	const videos = document.querySelectorAll(selectors.join(','));
+	const allowAll = isAllowedByCurrentUrl(allowedChannels);
 	videos.forEach(video => {
 		const title = getVideoTitle(video);
-		const shouldCover = !isInWhitelist(title, whitelist);
+		const shouldCover = allowAll ? false : !isInWhitelist(title, whitelist);
 		coverVideo(video, shouldCover);
 	});
 }
 
 // 메인 로직
 async function main() {
-	const result = await chrome.storage.sync.get(['enabled', 'whitelist']);
+	const result = await chrome.storage.sync.get(['enabled', 'whitelist', 'allowedChannels']);
 	const enabled = result.enabled !== undefined ? result.enabled : true;
 	currentWhitelist = result.whitelist || [];
+	allowedChannels = result.allowedChannels || [];
 
 	if (!enabled) return;
 
 	// 최초 전체 처리
-	processAllVideos(currentWhitelist);
+	processAllVideos(currentWhitelist, allowedChannels);
 
 	// MutationObserver로 동적 로딩 감시
 	const observer = new MutationObserver(() => {
-		processAllVideos(currentWhitelist);
+		processAllVideos(currentWhitelist, allowedChannels);
 	});
 	observer.observe(document.body, {
 		childList: true,
@@ -97,16 +105,21 @@ async function main() {
 
 	// storage 변경 감지하여 즉시 반영
 	chrome.storage.onChanged.addListener((changes, area) => {
-		if (area === 'sync' && (changes.whitelist || changes.enabled)) {
-			chrome.storage.sync.get(['enabled', 'whitelist'], (newResult) => {
+		if (area === 'sync' && (changes.whitelist || changes.allowedChannels || changes.enabled)) {
+			chrome.storage.sync.get(['enabled', 'whitelist', 'allowedChannels'], (newResult) => {
 				const newEnabled = newResult.enabled !== undefined ? newResult.enabled : true;
 				currentWhitelist = newResult.whitelist || [];
+				allowedChannels = newResult.allowedChannels || [];
 				if (newEnabled) {
-					processAllVideos(currentWhitelist);
+					processAllVideos(currentWhitelist, allowedChannels);
 				}
 			});
 		}
 	});
+}
+
+function isAllowedByCurrentUrl(allowedChannels) {
+	return allowedChannels.some(allowed => window.location.href.includes(allowed));
 }
 
 main(); 
