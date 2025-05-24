@@ -1,3 +1,6 @@
+// 전역 화이트리스트 변수
+let currentWhitelist = [];
+
 // 화이트리스트 단어 확인
 function isInWhitelist(title, whitelist) {
 	return whitelist.some(word => title.toLowerCase().includes(word.toLowerCase()));
@@ -21,7 +24,9 @@ function getVideoTitle(videoElement) {
 	];
 	for (const selector of selectors) {
 		const el = videoElement.querySelector(selector);
-		if (el && el.textContent) return el.textContent.trim();
+		if (el && el.textContent) {
+			return el.textContent.trim();
+		}
 	}
 	return '';
 }
@@ -46,7 +51,9 @@ function coverVideo(videoElement, shouldCover) {
 			videoElement.appendChild(overlay);
 		}
 	} else {
-		if (overlay) overlay.remove();
+		if (overlay) {
+			overlay.remove();
+		}
 	}
 }
 
@@ -72,22 +79,34 @@ function processAllVideos(whitelist) {
 async function main() {
 	const result = await chrome.storage.sync.get(['enabled', 'whitelist']);
 	const enabled = result.enabled !== undefined ? result.enabled : true;
-	const whitelist = result.whitelist || [];
+	currentWhitelist = result.whitelist || [];
 
 	if (!enabled) return;
 
 	// 최초 전체 처리
-	processAllVideos(whitelist);
+	processAllVideos(currentWhitelist);
 
 	// MutationObserver로 동적 로딩 감시
 	const observer = new MutationObserver(() => {
-		processAllVideos(whitelist);
+		processAllVideos(currentWhitelist);
 	});
 	observer.observe(document.body, {
 		childList: true,
 		subtree: true
 	});
+
+	// storage 변경 감지하여 즉시 반영
+	chrome.storage.onChanged.addListener((changes, area) => {
+		if (area === 'sync' && (changes.whitelist || changes.enabled)) {
+			chrome.storage.sync.get(['enabled', 'whitelist'], (newResult) => {
+				const newEnabled = newResult.enabled !== undefined ? newResult.enabled : true;
+				currentWhitelist = newResult.whitelist || [];
+				if (newEnabled) {
+					processAllVideos(currentWhitelist);
+				}
+			});
+		}
+	});
 }
 
-// 페이지 로드 시 실행
 main(); 
