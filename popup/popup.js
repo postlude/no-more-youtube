@@ -12,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// 익스텐션 토글 이벤트
 	extensionToggle.addEventListener('change', (e) => {
+		if (!e.target.checked) {
+			const confirmed = window.confirm('Are you sure you want to disable this extension?');
+			if (!confirmed) {
+				extensionToggle.checked = true;
+				return;
+			}
+		}
 		chrome.storage.sync.set({ enabled: e.target.checked }, () => {
 			chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 				chrome.tabs.reload(tabs[0].id);
