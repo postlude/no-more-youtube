@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	// 화이트리스트 단어 추가
-	addWordButton.addEventListener('click', () => {
+	// 화이트리스트 단어 추가 함수
+	function addWhitelistWord() {
 		const word = whitelistInput.value.trim();
 		if (word) {
 			chrome.storage.sync.get(['whitelist'], (result) => {
@@ -40,6 +40,16 @@ document.addEventListener('DOMContentLoaded', () => {
 					});
 				}
 			});
+		}
+	}
+
+	// 화이트리스트 단어 추가 버튼 클릭
+	addWordButton.addEventListener('click', addWhitelistWord);
+
+	// 화이트리스트 입력창에서 엔터 입력 시 추가
+	whitelistInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			addWhitelistWord();
 		}
 	});
 
