@@ -1,0 +1,9 @@
+ytd-rich-item-renderer[style*="blur"],
+ytd-video-renderer[style*="blur"] {
+  transition: filter 0.3s ease;
+}
+
+ytd-rich-item-renderer[style*="pointer-events: none"],
+ytd-video-renderer[style*="pointer-events: none"] {
+  cursor: not-allowed;
+} 

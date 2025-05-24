@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>No More YouTube</title>
+	<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+	<div class="container">
+		<h1>No More YouTube</h1>
+		
+		<div class="toggle-container">
+			<label class="switch">
+				<input type="checkbox" id="extensionToggle">
+				<span class="slider round"></span>
+			</label>
+			<span class="toggle-label">Enable Extension</span>
+		</div>
+
+		<div class="whitelist-container">
+			<h2>Whitelist Words</h2>
+			<div class="input-group">
+				<input type="text" id="whitelistInput" placeholder="New word">
+				<button id="addWord">Add</button>
+			</div>
+			<ul id="whitelistWords"></ul>
+		</div>
+	</div>
+	<script src="popup.js"></script>
+</body>
+</html> 
