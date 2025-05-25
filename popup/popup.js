@@ -84,7 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Allowed Channels 추가 함수
 	function addAllowedChannel() {
-		const channel = allowedChannelInput.value.trim();
+		let channel = allowedChannelInput.value.trim();
+		if (channel.startsWith('@')) {
+			channel = channel.slice(1);
+		}
 		if (channel) {
 			chrome.storage.sync.get(['allowedChannels'], (result) => {
 				const allowedChannels = result.allowedChannels ?? [];
