@@ -119,7 +119,10 @@ async function main() {
 }
 
 function isAllowedByCurrentUrl(allowedChannels) {
-	return allowedChannels.some(allowed => window.location.href.includes(allowed));
+	const url = window.location.href;
+	return allowedChannels.some(allowed => {
+		return url.includes(allowed) || url.includes(encodeURIComponent(allowed));
+	});
 }
 
 main(); 
