@@ -4,7 +4,12 @@ let allowedChannels = [];
 
 // 화이트리스트 단어 확인
 function isInWhitelist(title, whitelist) {
-	return whitelist.some(word => title.toLowerCase().includes(word.toLowerCase()));
+	title = title.replace(/\s+/g, ''); // 제목에서 모든 공백 제거
+	return whitelist.some(word => {
+		const wordNoSpace = word.replace(/\s+/g, '');
+		return title.toLowerCase().includes(word.toLowerCase())
+			|| title.toLowerCase().includes(wordNoSpace.toLowerCase());
+	});
 }
 
 // 다양한 title selector를 지원
