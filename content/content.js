@@ -69,6 +69,10 @@ function coverVideo(videoElement, shouldCover) {
 
 // 비디오 처리 함수
 function processAllVideos(whitelist, allowedChannels) {
+	// 플레이리스트 페이지는 예외 처리
+	if (window.location.pathname === '/feed/playlists') {
+		return;
+	}
 	const selectors = [
 		'ytd-rich-item-renderer',
 		'ytd-video-renderer',
