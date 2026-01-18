@@ -67,6 +67,21 @@ function coverVideo(videoElement, shouldCover) {
 	}
 }
 
+// 쇼츠만 처리하는 함수 (항상 실행)
+function processShorts() {
+	// 플레이리스트 페이지는 예외 처리
+	if (window.location.pathname === '/feed/playlists') {
+		return;
+	}
+	const shortsSelectors = [
+		'ytd-rich-shelf-renderer'
+	];
+	const shorts = document.querySelectorAll(shortsSelectors.join(','));
+	shorts.forEach(shortsElement => {
+		coverVideo(shortsElement, true);
+	});
+}
+
 // 비디오 처리 함수
 function processAllVideos(whitelist, allowedChannels) {
 	// 플레이리스트 페이지는 예외 처리
@@ -77,10 +92,8 @@ function processAllVideos(whitelist, allowedChannels) {
 		'ytd-rich-item-renderer',
 		'ytd-video-renderer',
 		'ytd-grid-video-renderer',
-		'ytd-reel-item-renderer',
 		'ytd-compact-video-renderer',
-		'ytd-playlist-video-renderer',
-		'ytd-reel-shelf-renderer ytd-reel-item-renderer'
+		'ytd-playlist-video-renderer'
 	];
 	const videos = document.querySelectorAll(selectors.join(','));
 	const allowAll = isAllowedByCurrentUrl(allowedChannels);
@@ -98,13 +111,28 @@ async function main() {
 	currentWhitelist = result.whitelist || [];
 	allowedChannels = result.allowedChannels || [];
 
-	if (!enabled) return;
+	// 쇼츠는 항상 처리 (enabled 상태와 관계없이)
+	processShorts();
+
+	if (!enabled) {
+		// enabled가 false일 때는 쇼츠만 처리하고 일반 비디오는 처리하지 않음
+		// MutationObserver로 동적 로딩된 쇼츠 감시
+		const shortsObserver = new MutationObserver(() => {
+			processShorts();
+		});
+		shortsObserver.observe(document.body, {
+			childList: true,
+			subtree: true
+		});
+		return;
+	}
 
 	// 최초 전체 처리
 	processAllVideos(currentWhitelist, allowedChannels);
 
 	// MutationObserver로 동적 로딩 감시
 	const observer = new MutationObserver(() => {
+		processShorts(); // 쇼츠는 항상 처리
 		processAllVideos(currentWhitelist, allowedChannels);
 	});
 	observer.observe(document.body, {
@@ -119,6 +147,8 @@ async function main() {
 				const newEnabled = newResult.enabled !== undefined ? newResult.enabled : true;
 				currentWhitelist = newResult.whitelist || [];
 				allowedChannels = newResult.allowedChannels || [];
+				// 쇼츠는 항상 처리
+				processShorts();
 				if (newEnabled) {
 					processAllVideos(currentWhitelist, allowedChannels);
 				}
