@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-	const extensionToggle = document.getElementById('extensionToggle');
 	const whitelistInput = document.getElementById('whitelistInput');
 	const addWordButton = document.getElementById('addWord');
 	const whitelistWords = document.getElementById('whitelistWords');
@@ -8,27 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const addChannelButton = document.getElementById('addChannel');
 	const allowedChannelsList = document.getElementById('allowedChannels');
 
-	// 익스텐션 상태 로드
-	chrome.storage.sync.get(['enabled', 'whitelist', 'allowedChannels'], (result) => {
-		extensionToggle.checked = result.enabled ?? true;
+	// 설정 로드
+	chrome.storage.sync.get(['whitelist', 'allowedChannels'], (result) => {
 		updateWhitelist(result.whitelist ?? []);
 		updateAllowedChannels(result.allowedChannels ?? []);
-	});
-
-	// 익스텐션 토글 이벤트
-	extensionToggle.addEventListener('change', (e) => {
-		if (!e.target.checked) {
-			const confirmed = window.confirm('Are you sure you want to disable this extension?');
-			if (!confirmed) {
-				extensionToggle.checked = true;
-				return;
-			}
-		}
-		chrome.storage.sync.set({ enabled: e.target.checked }, () => {
-			chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-				chrome.tabs.reload(tabs[0].id);
-			});
-		});
 	});
 
 	// 화이트리스트 단어 추가 함수

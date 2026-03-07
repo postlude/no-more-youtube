@@ -104,35 +104,19 @@ function processAllVideos(whitelist, allowedChannels) {
 	});
 }
 
-// 메인 로직
+// 메인 로직 (항상 실행)
 async function main() {
-	const result = await chrome.storage.sync.get(['enabled', 'whitelist', 'allowedChannels']);
-	const enabled = result.enabled !== undefined ? result.enabled : true;
+	const result = await chrome.storage.sync.get(['whitelist', 'allowedChannels']);
 	currentWhitelist = result.whitelist || [];
 	allowedChannels = result.allowedChannels || [];
 
-	// 쇼츠는 항상 처리 (enabled 상태와 관계없이)
-	processShorts();
-
-	if (!enabled) {
-		// enabled가 false일 때는 쇼츠만 처리하고 일반 비디오는 처리하지 않음
-		// MutationObserver로 동적 로딩된 쇼츠 감시
-		const shortsObserver = new MutationObserver(() => {
-			processShorts();
-		});
-		shortsObserver.observe(document.body, {
-			childList: true,
-			subtree: true
-		});
-		return;
-	}
-
 	// 최초 전체 처리
+	processShorts();
 	processAllVideos(currentWhitelist, allowedChannels);
 
 	// MutationObserver로 동적 로딩 감시
 	const observer = new MutationObserver(() => {
-		processShorts(); // 쇼츠는 항상 처리
+		processShorts();
 		processAllVideos(currentWhitelist, allowedChannels);
 	});
 	observer.observe(document.body, {
@@ -142,16 +126,12 @@ async function main() {
 
 	// storage 변경 감지하여 즉시 반영
 	chrome.storage.onChanged.addListener((changes, area) => {
-		if (area === 'sync' && (changes.whitelist || changes.allowedChannels || changes.enabled)) {
-			chrome.storage.sync.get(['enabled', 'whitelist', 'allowedChannels'], (newResult) => {
-				const newEnabled = newResult.enabled !== undefined ? newResult.enabled : true;
+		if (area === 'sync' && (changes.whitelist || changes.allowedChannels)) {
+			chrome.storage.sync.get(['whitelist', 'allowedChannels'], (newResult) => {
 				currentWhitelist = newResult.whitelist || [];
 				allowedChannels = newResult.allowedChannels || [];
-				// 쇼츠는 항상 처리
 				processShorts();
-				if (newEnabled) {
-					processAllVideos(currentWhitelist, allowedChannels);
-				}
+				processAllVideos(currentWhitelist, allowedChannels);
 			});
 		}
 	});
